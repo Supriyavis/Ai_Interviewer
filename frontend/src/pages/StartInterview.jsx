@@ -145,11 +145,3 @@ export default function StartInterview() {
     </div>
   );
 }
-nterview 🚀
-          </button>
-        </div>
-
-      </div>
-    </div>
-  );
-}
