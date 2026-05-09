@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
 import { FaEnvelope, FaUser, FaMapMarkerAlt } from "react-icons/fa";
+import { API_BASE_URL } from "../apiConfig";
 
 export default function Contact() {
   const [name, setName] = useState("");
@@ -14,7 +15,7 @@ export default function Contact() {
     }
 
     try {
-      const res = await fetch("http://localhost:5001/api/contact", {
+      const res = await fetch(`${API_BASE_URL}/api/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Timer from "../components/Timer";
 import { FaRobot, FaMicrophone, FaStop, FaVolumeUp } from "react-icons/fa";
+import { API_BASE_URL } from "../apiConfig";
 
 export default function Interview() {
   const location = useLocation();
@@ -97,7 +98,7 @@ export default function Interview() {
       setLoading(true);
 
       const res = await fetch(
-        `http://127.0.0.1:5001/api/question?domain=${encodeURIComponent(domain)}&qNum=${currentQ}`
+        `${API_BASE_URL}/api/question?domain=${encodeURIComponent(domain)}&qNum=${currentQ}`
       );
 
       const data = await res.json();
@@ -144,7 +145,7 @@ export default function Interview() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://127.0.0.1:5001/api/evaluate", {
+      const res = await fetch(`${API_BASE_URL}/api/evaluate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

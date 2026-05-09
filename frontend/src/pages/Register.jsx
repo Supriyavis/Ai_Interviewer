@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { API_BASE_URL } from "../apiConfig";
 
 export default function Register() {
   const [firstName, setFirstName] = useState("");
@@ -29,7 +30,7 @@ export default function Register() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:5001/api/auth/register", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
