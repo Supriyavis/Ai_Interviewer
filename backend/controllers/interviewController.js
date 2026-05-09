@@ -195,7 +195,7 @@ export const evaluateAnswer = async (req, res) => {
     });
 
     const prompt = `
-Evaluate this answer.
+Evaluate the candidate's answer for an interview.
 
 Question: ${question}
 Answer: ${answer}
@@ -203,8 +203,12 @@ Answer: ${answer}
 Return JSON strictly in this format:
 {
   "score": number (0-100),
-  "improvement_areas": "A short 3-5 word summary of what to improve (e.g., 'Technical depth', 'Communication skills', 'Problem framing')",
-  "feedback": "Provide exactly 5 short bullet points. If the answer is wrong or vague, use the 5 bullet points to explain the correct answer. If the answer is good, use the 5 bullet points to give tips for improvement."
+  "improvement_areas": "A short 3-5 word summary of what to improve (e.g., 'Technical depth', 'Missing core concepts', 'Better structure')",
+  "feedback": "Provide exactly 5 short bullet points. 
+  - If the answer is correct and high quality, provide tips to reach an expert level. 
+  - If the answer is partially correct, identify what is missing or incorrect. 
+  - If the answer is completely wrong or unrelated, explain WHY it is wrong and what key concepts were expected, but do NOT simply provide a 'copy-paste' correct answer.
+  - Keep the tone professional and constructive."
 }
 `;
 

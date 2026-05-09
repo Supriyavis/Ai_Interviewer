@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import Navbar from "../components/Navbar";
 import Timer from "../components/Timer";
 import { FaRobot, FaMicrophone, FaStop, FaVolumeUp } from "react-icons/fa";
 import { API_BASE_URL } from "../apiConfig";
@@ -9,7 +8,8 @@ export default function Interview() {
   const location = useLocation();
   const domain = location.state?.domain || "Frontend Developer";
 
-  const [started, setStarted] = useState(false); // ⭐ NEW
+  const [started, setStarted] = useState(false);
+  const [timerStarted, setTimerStarted] = useState(false); // ⭐ NEW: Controls when timer begins
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState(null);
@@ -74,6 +74,10 @@ export default function Interview() {
       try {
         recognitionRef.current.start();
         setIsRecording(true);
+        // ✅ START TIMER ONCE USER CLICKS SPEAK ANSWER
+        if (!timerStarted) {
+          setTimerStarted(true);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -86,24 +90,22 @@ export default function Interview() {
     window.speechSynthesis.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.85; // Speak slower for better understanding
+    utterance.rate = 0.85;
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);
   };
 
-  // 🔥 FETCH QUESTION
   const getQuestion = async () => {
     try {
       setLoading(true);
+      setTimerStarted(false); // Reset timer for new question
 
       const res = await fetch(
         `${API_BASE_URL}/api/question?domain=${encodeURIComponent(domain)}&qNum=${currentQ}`
       );
 
       const data = await res.json();
-
-      console.log("Question API:", data);
 
       if (data.error) {
         setQuestion(`⚠️ Error: ${data.error}`);
@@ -123,22 +125,28 @@ export default function Interview() {
     }
   };
 
-  // 🔥 START INTERVIEW
   const startInterview = () => {
     setStarted(true);
     getQuestion();
   };
 
-  // 🔥 SUBMIT ANSWER
   const submitAnswer = async (autoSubmit = false) => {
-    // Stop recording and speaking when submitting
     recognitionRef.current?.stop();
     setIsRecording(false);
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+    setTimerStarted(false); // 🛑 Stop timer when submitting
 
-    if (!autoSubmit && !answer.trim()) {
-      alert("Write answer first");
+    const finalAnswer = (answer + interimResult).trim();
+
+    // ✅ HANDLE EMPTY ANSWER (No fetch needed, score 0)
+    if (!finalAnswer) {
+      setResult({
+        score: 0,
+        improvement_areas: "No answer provided",
+        feedback: "• You did not provide any answer to this question.\n• Please try to respond within the time limit.\n• Practice articulating your thoughts clearly.\n• Consistent practice will help build confidence.\n• Replay the question if you need more time to think next time."
+      });
+      setScore(0);
       return;
     }
 
@@ -150,7 +158,7 @@ export default function Interview() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question, answer }),
+        body: JSON.stringify({ question, answer: finalAnswer }),
       });
 
       const data = await res.json();
@@ -171,7 +179,6 @@ export default function Interview() {
     }
   };
 
-  // 🔥 NEXT QUESTION
   const nextQuestion = () => {
     if (currentQ >= 5) {
       alert("Interview Completed 🎉");
@@ -183,21 +190,19 @@ export default function Interview() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#050510] text-white px-6 py-20">
+    <div className="relative min-h-screen bg-[#050510] text-white px-4 md:px-6 py-24 overflow-hidden">
 
       {/* BACKGROUND */}
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-pink-500 blur-[150px] opacity-30 rounded-full"></div>
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-600 blur-[150px] opacity-20 rounded-full"></div>
+      <div className="absolute bottom-0 left-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-pink-500 blur-[100px] md:blur-[150px] opacity-20 md:opacity-30 rounded-full z-0"></div>
+      <div className="absolute top-0 right-0 w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-purple-600 blur-[100px] md:blur-[150px] opacity-10 md:opacity-20 rounded-full z-0"></div>
 
-      <Navbar />
-
-      <div className="max-w-6xl mx-auto mt-10 text-center">
+      <div className="relative z-10 max-w-5xl mx-auto mt-4 md:mt-10 text-center">
 
         {/* BEFORE START */}
         {!started && (
-          <div className="glass p-10 rounded-2xl border border-gray-800">
+          <div className="glass p-8 md:p-16 rounded-3xl border border-gray-800 bg-white/5 backdrop-blur-md shadow-2xl">
 
-            <h2 className="text-3xl mb-6">
+            <h2 className="text-2xl md:text-4xl font-bold mb-8 leading-tight">
               Start Your{" "}
               <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
                 {domain} Interview
@@ -206,9 +211,10 @@ export default function Interview() {
 
             <button
               onClick={startInterview}
-              className="px-10 py-4 rounded-xl text-lg 
+              className="px-10 py-4 rounded-xl text-lg font-bold
                          bg-gradient-to-r from-purple-500 to-pink-500 
-                         hover:scale-105 transition">
+                         hover:scale-105 transition shadow-lg shadow-pink-500/20 active:scale-95"
+            >
               Start Interview 🚀
             </button>
 
@@ -217,65 +223,75 @@ export default function Interview() {
 
         {/* AFTER START */}
         {started && (
-          <div>
+          <div className="space-y-6">
 
             {/* HEADER */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl text-pink-400">
-                {domain} Interview
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+              <h2 className="text-xl font-bold text-pink-400">
+                {domain}
               </h2>
 
-              {!result && <Timer key={currentQ} duration={40} onExpire={() => submitAnswer(true)} />}
+              {/* ✅ TIMER ONLY STARTS WHEN USER CLICKS SPEAK ANSWER */}
+              {!result && timerStarted && (
+                <Timer key={currentQ} duration={40} onExpire={() => submitAnswer(true)} />
+              )}
             </div>
 
             {/* PROGRESS BAR */}
-            <div className="w-full bg-gray-800 h-2 rounded-full mb-6 overflow-hidden">
+            <div className="w-full bg-gray-800 h-2.5 rounded-full overflow-hidden border border-gray-700 shadow-inner">
               <div 
-                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-700 ease-out"
                 style={{ width: `${(currentQ / 5) * 100}%` }}
               ></div>
             </div>
 
             {/* QUESTION WITH ROBOT */}
-            <div className="glass p-8 rounded-xl border border-gray-800 flex flex-col items-center relative">
-              <p className="text-sm text-gray-400 absolute top-4 left-4">
-                Question {currentQ} / 5
+            <div className="glass p-6 md:p-10 rounded-3xl border border-gray-800 bg-white/5 backdrop-blur-md relative shadow-xl">
+              <p className="text-xs font-bold text-gray-500 absolute top-4 left-6 uppercase tracking-widest">
+                Question {currentQ} of 5
               </p>
               
               <button 
                 onClick={() => speakQuestion(question)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-pink-400 transition"
+                className="absolute top-4 right-6 text-gray-400 hover:text-pink-400 transition transform hover:scale-110 active:scale-90"
                 title="Replay Audio"
               >
                 <FaVolumeUp size={20} />
               </button>
 
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center bg-gray-900 mb-6 transition-all duration-300 ${isSpeaking ? 'shadow-[0_0_30px_rgba(236,72,153,0.6)] border-2 border-pink-500 scale-110' : 'border border-gray-700'}`}>
-                <FaRobot size={40} className={isSpeaking ? "text-pink-400" : "text-gray-500"} />
+              <div className={`w-20 md:w-24 h-20 md:h-24 mx-auto rounded-full flex items-center justify-center bg-gray-900 mb-6 transition-all duration-500 ${isSpeaking ? 'shadow-[0_0_40px_rgba(236,72,153,0.5)] border-2 border-pink-500 scale-110' : 'border border-gray-800'}`}>
+                <FaRobot size={36} className={isSpeaking ? "text-pink-400 animate-pulse" : "text-gray-600"} />
               </div>
 
-              <h3 className="text-xl font-medium max-w-2xl text-center leading-relaxed">
-                {loading ? "Thinking..." : question}
+              <h3 className="text-lg md:text-2xl font-semibold max-w-3xl mx-auto leading-relaxed text-gray-100">
+                {loading ? (
+                   <span className="flex items-center justify-center gap-2">
+                     <span className="w-2 h-2 bg-pink-500 rounded-full animate-bounce"></span>
+                     <span className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                     <span className="w-2 h-2 bg-pink-500 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                   </span>
+                ) : question}
               </h3>
             </div>
 
             {/* ANSWER */}
-            <div className="glass p-6 rounded-xl mt-6 border border-gray-800">
+            <div className="glass p-6 rounded-3xl border border-gray-800 bg-white/5 backdrop-blur-md shadow-xl">
               <textarea
                 value={answer + interimResult}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Type your answer or click Speak Answer..."
-                className="w-full h-40 bg-transparent border border-gray-700 p-4 rounded 
-                           focus:ring-2 focus:ring-pink-500"
+                placeholder="Type your answer or use voice command..."
+                className="w-full h-32 md:h-44 bg-gray-900/40 border border-gray-700 p-4 rounded-2xl 
+                           focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition
+                           placeholder:text-gray-600"
               />
 
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
                 <button
                   onClick={toggleRecording}
-                  className={`flex items-center gap-2 px-6 py-2 rounded-xl border transition ${
+                  className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border font-bold transition shadow-md ${
                     isRecording 
                       ? "border-red-500 text-red-400 bg-red-500/10 animate-pulse" 
-                      : "border-gray-700 text-gray-400 hover:border-pink-500 hover:text-pink-400"
+                      : "border-gray-700 text-gray-400 hover:border-pink-500 hover:text-pink-400 hover:bg-pink-500/5"
                   }`}
                 >
                   {isRecording ? <><FaStop /> Stop Recording</> : <><FaMicrophone /> Speak Answer</>}
@@ -283,7 +299,7 @@ export default function Interview() {
 
                 <button
                   onClick={() => submitAnswer()}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:scale-105 transition font-medium"
+                  className="w-full sm:w-auto px-10 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:scale-[1.02] transition font-bold shadow-lg shadow-pink-500/20 active:scale-95"
                 >
                   Submit Answer 🚀
                 </button>
@@ -292,45 +308,52 @@ export default function Interview() {
 
             {/* RESULT */}
             {result && (
-              <div className="glass mt-10 p-8 rounded-2xl border border-gray-700 shadow-2xl relative overflow-hidden transition-all duration-500 animate-[fadeIn_0.5s_ease-out]">
-                <div className={`absolute top-0 left-0 w-full h-1 ${score >= 50 ? 'bg-green-500 shadow-[0_0_20px_#22c55e]' : 'bg-red-500 shadow-[0_0_20px_#ef4444]'}`}></div>
+              <div className="glass mt-8 p-6 md:p-10 rounded-3xl border border-gray-700 bg-white/5 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-all duration-700 animate-in fade-in slide-in-from-bottom-10">
+                <div className={`absolute top-0 left-0 w-full h-1.5 ${score >= 50 ? 'bg-green-500 shadow-[0_0_20px_#22c55e]' : 'bg-red-500 shadow-[0_0_20px_#ef4444]'}`}></div>
 
-                <h3 className="mb-6 text-3xl font-bold text-center flex flex-col items-center gap-2">
-                  {score >= 50 ? (
-                    <span className="text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)] animate-pulse">✅ Correct Answer!</span>
-                  ) : (
-                    <span className="text-red-400 drop-shadow-[0_0_10px_rgba(248,113,113,0.5)]">❌ Needs Work</span>
-                  )}
-                </h3>
+                <div className="flex flex-col items-center gap-4 mb-8">
+                  <div className={`text-5xl md:text-6xl font-black transition-all duration-1000 ${score >= 50 ? 'text-green-400 scale-110' : 'text-red-400'}`}>
+                    {score}%
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold uppercase tracking-widest">
+                    {score >= 50 ? "Excellent!" : "Needs Practice"}
+                  </h3>
+                </div>
 
-                <div className="text-gray-200 mb-8 text-left text-lg leading-relaxed bg-gray-900/50 p-6 rounded-xl border border-gray-800 whitespace-pre-wrap">
+                <div className="text-gray-300 mb-8 text-left text-base md:text-lg leading-relaxed bg-gray-900/60 p-6 rounded-2xl border border-gray-800/50 whitespace-pre-wrap shadow-inner">
                   {result.feedback}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-8 justify-center mb-8">
-                  <div className={`w-32 h-32 flex flex-col items-center justify-center rounded-full border-4 text-4xl font-black shadow-lg transition-all duration-700
-                                  ${score >= 50 ? 'border-green-500 text-green-400 shadow-[0_0_30px_rgba(34,197,94,0.3)]' : 'border-red-500 text-red-400 shadow-[0_0_30px_rgba(239,68,68,0.3)]'}`}>
-                    <span>{score}</span>
-                    <span className="text-xs font-normal text-gray-400 uppercase tracking-widest mt-1">Score</span>
-                  </div>
-
-                  {result.improvement_areas && (
-                    <div className="flex flex-col gap-3 text-left bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 min-w-[200px] max-w-sm">
-                      <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-1">Key Improvement Area</h4>
-                      <p className="text-pink-400 font-medium">{result.improvement_areas}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                   {result.improvement_areas && (
+                    <div className="text-left bg-gray-800/40 p-5 rounded-2xl border border-gray-700/30">
+                      <h4 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Key Improvement Area</h4>
+                      <p className="text-pink-400 font-bold leading-snug">{result.improvement_areas}</p>
                     </div>
                   )}
+                  <div className="text-left bg-gray-800/40 p-5 rounded-2xl border border-gray-700/30">
+                      <h4 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Interview Insight</h4>
+                      <p className="text-blue-400 font-bold leading-snug">Focus on clarity and domain specifics.</p>
+                  </div>
                 </div>
 
                 <button
                   onClick={nextQuestion}
-                  className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(236,72,153,0.4)]"
+                  className="w-full py-4 rounded-2xl font-black text-white text-lg tracking-widest
+                             bg-gradient-to-r from-purple-600 to-pink-600 
+                             hover:from-purple-500 hover:to-pink-500 hover:scale-[1.01] 
+                             transition-all shadow-[0_10px_30px_rgba(236,72,153,0.3)] active:scale-95"
                 >
-                  Next Question →
+                  NEXT QUESTION →
                 </button>
               </div>
             )}
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
         )}
       </div>
     </div>

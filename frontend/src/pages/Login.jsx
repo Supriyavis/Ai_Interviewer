@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
 import { API_BASE_URL } from "../apiConfig";
 
 export default function Login() {
@@ -46,60 +45,65 @@ export default function Login() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 pt-24 overflow-hidden bg-[#050510] text-white">
-
-      {/* ✅ NAVBAR */}
-      <Navbar />
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-24 overflow-hidden bg-[#050510] text-white">
 
       {/* 🌈 BACKGROUND BLOBS */}
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-pink-500 blur-[150px] opacity-30 rounded-full"></div>
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-600 blur-[150px] opacity-20 rounded-full"></div>
-      <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] bg-blue-500 blur-[120px] opacity-20 rounded-full"></div>
+      <div className="absolute bottom-0 left-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-pink-500 blur-[100px] md:blur-[150px] opacity-20 md:opacity-30 rounded-full z-0"></div>
+      <div className="absolute top-0 right-0 w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-purple-600 blur-[100px] md:blur-[150px] opacity-10 md:opacity-20 rounded-full z-0"></div>
 
       {/* 🧊 CARD */}
       <div
-        className="relative z-10 backdrop-blur-xl bg-white/10 border border-white/20 
-                   p-12 rounded-3xl w-full max-w-lg text-center
-                   transition duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(236,72,153,0.4)]"
+        className="relative z-10 backdrop-blur-xl bg-white/5 border border-white/10 
+                   p-8 md:p-12 rounded-3xl w-full max-w-lg text-center
+                   transition duration-300 hover:shadow-[0_0_40px_rgba(236,72,153,0.2)]"
       >
-        <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-pink-400 to-blue-400 text-transparent bg-clip-text">
+        <h2 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-pink-400 to-blue-400 text-transparent bg-clip-text">
           Welcome Back 👋
         </h2>
 
-        <p className="text-gray-300 mb-8">
+        <p className="text-gray-400 mb-8">
           Login to continue your journey
         </p>
 
-        {/* EMAIL */}
-        <input
-          type="email"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 mb-4 rounded-xl bg-white/10 text-white border border-white/20 
-                     focus:ring-2 focus:ring-pink-500 hover:border-pink-400 transition"
-        />
+        <div className="space-y-4">
+          {/* EMAIL */}
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 
+                       focus:ring-2 focus:ring-pink-500 outline-none hover:border-pink-400 transition"
+          />
 
-        {/* PASSWORD */}
-        <input
-          type="password"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 mb-5 rounded-xl bg-white/10 text-white border border-white/20 
-                     focus:ring-2 focus:ring-pink-500 hover:border-pink-400 transition"
-        />
+          {/* PASSWORD */}
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-4 rounded-xl bg-gray-900/50 border border-gray-700 
+                       focus:ring-2 focus:ring-pink-500 outline-none hover:border-pink-400 transition"
+          />
 
-        {/* BUTTON */}
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="w-full py-3 rounded-xl text-lg font-semibold
-                     bg-gradient-to-r from-pink-500 to-blue-500
-                     hover:scale-105 hover:shadow-[0_0_25px_rgba(236,72,153,0.5)]
-                     active:scale-95 transition duration-200
-                     disabled:opacity-50"
-        >
-          {loading ? "Logging in..." : "Login 🚀"}
-        </button>
+          {/* BUTTON */}
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full py-4 rounded-xl text-lg font-bold
+                       bg-gradient-to-r from-pink-500 to-blue-500
+                       hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(236,72,153,0.4)]
+                       active:scale-95 transition duration-200
+                       disabled:opacity-50 mt-4"
+          >
+            {loading ? "Logging in..." : "Login 🚀"}
+          </button>
+        </div>
+        
+        <p className="mt-6 text-gray-400 text-sm">
+          Don't have an account?{" "}
+          <button onClick={() => navigate("/register")} className="text-pink-400 hover:underline">Register here</button>
+        </p>
       </div>
     </div>
   );

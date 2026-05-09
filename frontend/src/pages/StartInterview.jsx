@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
 
 export default function StartInterview() {
   const [domain, setDomain] = useState("");
@@ -33,35 +32,33 @@ export default function StartInterview() {
   const visibleDomains = showAll ? domains : domains.slice(0, 9);
 
   return (
-    <div className="relative w-full min-h-screen px-6 md:px-10 py-20 text-white overflow-hidden bg-[#050510]">
+    <div className="relative w-full min-h-screen px-4 md:px-10 py-20 text-white overflow-hidden bg-[#050510]">
 
       {/* BACKGROUND */}
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-pink-500 blur-[150px] opacity-30 rounded-full"></div>
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-600 blur-[150px] opacity-20 rounded-full"></div>
+      <div className="absolute bottom-0 left-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-pink-500 blur-[100px] md:blur-[150px] opacity-20 md:opacity-30 rounded-full z-0"></div>
+      <div className="absolute top-0 right-0 w-[250px] md:w-[400px] h-[250px] md:h-[400px] bg-purple-600 blur-[100px] md:blur-[150px] opacity-10 md:opacity-20 rounded-full z-0"></div>
 
-      <Navbar />
+      <div className="relative z-10 max-w-7xl mx-auto mt-10 text-center">
 
-      <div className="max-w-7xl mx-auto mt-10 text-center">
-
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">
+        <h1 className="text-3xl md:text-5xl font-bold mb-4">
           Start Your{" "}
           <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
             AI Interview
           </span>
         </h1>
 
-        <p className="text-gray-400 mb-12">
+        <p className="text-gray-400 mb-12 px-4">
           Choose your domain and begin your personalized interview practice
         </p>
 
         {/* DOMAIN GRID */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-4">
 
           {visibleDomains.map((item, index) => (
             <div
               key={index}
               onClick={() => setDomain(item.name)}
-              className={`relative p-6 rounded-2xl border cursor-pointer transition duration-300
+              className={`relative p-6 rounded-2xl border cursor-pointer transition duration-300 bg-white/5 backdrop-blur-sm
                 ${
                   domain === item.name
                     ? "border-green-400 shadow-[0_0_25px_rgba(34,197,94,0.5)]"
@@ -80,7 +77,7 @@ export default function StartInterview() {
               <div className="flex items-start gap-4">
 
                 {/* ICON */}
-                <div className="w-14 h-14 flex items-center justify-center 
+                <div className="w-14 h-14 flex-shrink-0 flex items-center justify-center 
                                 rounded-full 
                                 bg-gradient-to-r from-purple-500/20 to-pink-500/20 
                                 text-2xl">
@@ -122,7 +119,7 @@ export default function StartInterview() {
         )}
 
         {/* BUTTON */}
-        <div className="mt-12">
+        <div className="mt-12 px-6">
           <button
             onClick={() => {
               if (!domain) {
@@ -134,12 +131,21 @@ export default function StartInterview() {
                 state: { domain },
               });
             }}
-            className="px-10 py-4 rounded-xl text-lg 
+            className="w-full sm:w-auto px-10 py-4 rounded-xl text-lg 
                        bg-gradient-to-r from-purple-500 to-pink-500 
                        hover:scale-105 
                        hover:shadow-[0_0_30px_rgba(236,72,153,0.4)]
-                       transition duration-300">
+                       transition duration-300 font-bold shadow-lg"
+          >
             Start Interview 🚀
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+nterview 🚀
           </button>
         </div>
 

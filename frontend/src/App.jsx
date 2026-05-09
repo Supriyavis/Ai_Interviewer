@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 
 import MainPage from "./pages/MainPage";
 import Interview from "./pages/Interview";
@@ -15,6 +16,7 @@ import StartInterview from "./pages/StartInterview";
 export default function App() {
   return (
     <BrowserRouter>
+      <Navbar />
       <Routes>
 
         <Route path="/" element={<MainPage />} />
